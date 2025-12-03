@@ -13,8 +13,8 @@ defmodule Day03 do
   defp getMax(line, count) do
     line
       |> String.split("", trim: true)
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.chunk_every(count, 1, :discard)
+      |> Stream.map(&String.to_integer/1)
+      |> Stream.chunk_every(count, 1, :discard)
       |> Enum.reduce(List.duplicate(-1, 2), fn ints , acc ->
         Enum.reduce(Enum.with_index(ints), acc, fn {num, idx}, acc2 ->
           if num > Enum.at(acc2, idx) do
