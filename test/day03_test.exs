@@ -11,6 +11,6 @@ defmodule Day03Test do
   end
 
   test "part2 example" do
-    assert Day03.part2(@example_input) == :todo
+    assert Day03.part2(@example_input) == 3121910778619
   end
 end
