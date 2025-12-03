@@ -11,7 +11,6 @@ L1
 L99
 R14
 L82"
-  # TODO: Fill @example_input with sample problem input
 
   test "part1 example" do
     assert Day01.part1(@example_input) == 3

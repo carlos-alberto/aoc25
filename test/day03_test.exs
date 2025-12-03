@@ -1,11 +1,13 @@
 defmodule Day03Test do
   use ExUnit.Case, async: true
 
-  @example_input ""
-  # TODO: Fill @example_input with sample problem input
+  @example_input "987654321111111
+811111111111119
+234234234234278
+818181911112111"
 
   test "part1 example" do
-    assert Day03.part1(@example_input) == :todo
+    assert Day03.part1(@example_input) == 357
   end
 
   test "part2 example" do
