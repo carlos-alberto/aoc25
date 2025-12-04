@@ -20,15 +20,6 @@ defmodule Day02 do
     a..b
   end
 
-  def part1(input) do
-    input
-    |> String.split(",", trim: true)
-    |> Enum.map(&parse_range/1)
-    |> Enum.flat_map(& &1)
-    |> Enum.filter(&is_same_part_one/1)
-    |> Enum.sum()
-  end
-
   defp is_same_part_two(num) do
     str = Integer.to_string(num)
     len = byte_size(str)
@@ -37,7 +28,7 @@ defmodule Day02 do
       false
     else
       2..len
-      |> Enum.filter(&(rem(len, &1) == 0))
+      |> Stream.filter(&(rem(len, &1) == 0))
       |> Enum.any?(fn parts ->
         chunk_size = div(len, parts)
 
@@ -51,12 +42,35 @@ defmodule Day02 do
     end
   end
 
+  def part1(input) do
+    input
+    |> String.split(",", trim: true)
+    |> Stream.map(&parse_range/1)
+    |> Stream.flat_map(& &1)
+    |> Stream.chunk_every(1000)
+    |> Task.async_stream(
+      fn chunk -> Enum.filter(chunk, &is_same_part_one/1) end,
+      timeout: :infinity
+    )
+    |> Enum.reduce(0, fn
+      {:ok, matching_numbers}, acc -> acc + Enum.sum(matching_numbers)
+      {:error, _}, acc -> acc
+    end)
+  end
+
   def part2(input) do
     input
     |> String.split(",", trim: true)
-    |> Enum.map(&parse_range/1)
-    |> Enum.flat_map(& &1)
-    |> Enum.filter(&is_same_part_two/1)
-    |> Enum.sum()
+    |> Stream.map(&parse_range/1)
+    |> Stream.flat_map(& &1)
+    |> Stream.chunk_every(1000)
+    |> Task.async_stream(
+      fn chunk -> Enum.filter(chunk, &is_same_part_two/1) end,
+      timeout: :infinity
+    )
+    |> Enum.reduce(0, fn
+      {:ok, matching_numbers}, acc -> acc + Enum.sum(matching_numbers)
+      {:error, _}, acc -> acc
+    end)
   end
 end
