@@ -4,9 +4,14 @@ defmodule Day04 do
   """
 
   @surrounds [
-    {-1, -1}, {-1, 0}, {-1, 1},
-    {0, -1},           {0, 1},
-    {1, -1},  {1, 0},  {1, 1}
+    {-1, -1},
+    {-1, 0},
+    {-1, 1},
+    {0, -1},
+    {0, 1},
+    {1, -1},
+    {1, 0},
+    {1, 1}
   ]
 
   defp num_surrounded_by(x, y, mapped) do
@@ -20,19 +25,19 @@ defmodule Day04 do
 
   defp parse_input(input) do
     input
-      |> String.split("\n", trim: true)
-      |> Stream.with_index
-      |> Enum.reduce(%{}, fn {line, line_idx}, acc ->
-        line
-        |> String.graphemes()
-        |> Enum.with_index()
-        |> Enum.reduce(acc, fn {char, idx}, acc2 ->
-          case char do
-            "@" -> Map.put(acc2, {idx, line_idx}, true)
-            _ -> acc2
-          end
-        end)
+    |> String.split("\n", trim: true)
+    |> Stream.with_index()
+    |> Enum.reduce(%{}, fn {line, line_idx}, acc ->
+      line
+      |> String.graphemes()
+      |> Enum.with_index()
+      |> Enum.reduce(acc, fn {char, idx}, acc2 ->
+        case char do
+          "@" -> Map.put(acc2, {idx, line_idx}, true)
+          _ -> acc2
+        end
       end)
+    end)
   end
 
   def part1(input) do
