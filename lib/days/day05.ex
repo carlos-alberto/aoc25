@@ -39,7 +39,7 @@ defmodule Day05 do
   defp reduce_ranges(ranges) do
     reduced_ranges =
       ranges
-      |> Enum.sort
+      |> Enum.sort()
       |> Enum.reduce([], fn {start, end_}, acc ->
         Enum.reduce(acc, %{reduced_ranges: acc, changed: false}, fn range, acc2 ->
           case range do
