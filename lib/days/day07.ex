@@ -3,82 +3,133 @@ defmodule Day07 do
   Advent of Code - Day 07
   """
 
-  defp process_rows([], _split_type, _row_idx, acc), do: acc
+  def parse_to_grid(rows) do
+    height = length(rows)
+    width = rows |> hd() |> String.length()
 
-  defp process_rows([line | rest_lines], split_type, row_idx, acc) do
-    updated_acc =
-      line
-      |> String.graphemes()
-      |> process_cols(split_type, row_idx, 0, acc)
+    {splitters, starts} =
+      for {line, y} <- Enum.with_index(rows),
+          {char, x} <- Enum.with_index(String.graphemes(line)),
+          reduce: {MapSet.new(), []} do
+        {splitters, starts} ->
+          case char do
+            "^" -> {MapSet.put(splitters, {x, y}), starts}
+            "S" -> {splitters, [{x, y} | starts]}
+            _ -> {splitters, starts}
+          end
+      end
 
-    process_rows(rest_lines, split_type, row_idx + 1, updated_acc)
+    %{
+      splitters: splitters,
+      starts: starts,
+      height: height,
+      width: width
+    }
   end
 
-  defp process_cols([], _split_type, _row_idx, _col_idx, acc), do: acc
-
-  defp process_cols([char | rest_chars], split_type, row_idx, col_idx, acc) do
-    process_cols(
-      rest_chars,
-      split_type,
-      row_idx,
-      col_idx + 1,
-      handle_cell(char, split_type, row_idx, col_idx, acc)
-    )
+  defp track_beams(%{starts: starts} = grid, used_splitters) do
+    track_beams(starts, grid, used_splitters)
   end
 
-  defp handle_cell("S", _split_type, row_idx, col_idx, acc) do
-    %{acc | current_beams: Map.put(acc.current_beams, {row_idx, col_idx}, true)}
+  defp track_beams([], _grid, used_splitters), do: used_splitters
+
+  defp track_beams([{_x, y} | rest], %{height: height} = grid, used)
+       when y >= height do
+    track_beams(rest, grid, used)
   end
 
-  defp handle_cell("^", split_type, row_idx, col_idx, acc) do
-    has_beam_above? =
-      Enum.any?(0..row_idx, fn r ->
-        Map.has_key?(acc.current_beams, {r, col_idx})
-      end)
+  defp track_beams([pos | rest], grid, used) do
+    {x, y} = pos
 
-    if has_beam_above? do
-      %{
-        acc
-        | current_beams: calculate_new_beams(acc.current_beams, row_idx, col_idx, split_type),
-          splits: acc.splits + 1
-      }
-    else
-      acc
+    case determine_action(pos, grid, used) do
+      :stop ->
+        track_beams(rest, grid, used)
+
+      :continue ->
+        track_beams([{x, y + 1} | rest], grid, used)
+
+      :split ->
+        left = {x - 1, y}
+        right = {x + 1, y}
+
+        new_used =
+          Map.update(used, pos, %{left: 1, right: 1}, fn counts ->
+            %{
+              left: counts.left + 1,
+              right: counts.right + 1
+            }
+          end)
+
+        track_beams([left, right | rest], grid, new_used)
     end
   end
 
-  defp handle_cell(_char, _split_type, _row_idx, _col_idx, acc), do: acc
+  defp determine_action(pos, %{splitters: splitters}, used) do
+    is_splitter = MapSet.member?(splitters, pos)
 
-  defp calculate_new_beams(current_beams, row_idx, col_idx, "BOTH") do
-    current_beams
-    |> Map.put({row_idx, col_idx - 1}, true)
-    |> Map.put({row_idx, col_idx + 1}, true)
-    |> Map.filter(fn {{_r, c}, _v} -> c != col_idx end)
-  end
+    cond do
+      not is_splitter ->
+        :continue
 
-  defp calculate_new_beams(current_beams, row_idx, col_idx, "LEFT") do
-    current_beams
-    |> Map.put({row_idx, col_idx - 1}, true)
-    |> Map.filter(fn {{_r, c}, _v} -> c != col_idx end)
-  end
+      not Map.has_key?(used, pos) ->
+        :split
 
-  defp calculate_new_beams(current_beams, row_idx, col_idx, "RIGHT") do
-    current_beams
-    |> Map.put({row_idx, col_idx + 1}, true)
-    |> Map.filter(fn {{_r, c}, _v} -> c != col_idx end)
+      true ->
+        :stop
+    end
   end
 
   def part1(input) do
     input
     |> String.split("\n", trim: true)
-    |> process_rows("BOTH", 0, %{current_beams: %{}, splits: 0})
-    |> Map.get(:splits)
+    |> parse_to_grid()
+    |> track_beams(%{})
+    |> map_size()
+  end
+
+  defp count_paths(%{starts: starts} = grid, memo) do
+    Enum.reduce(starts, {0, memo}, fn start, {acc_paths, memo} ->
+      {paths, memo} = count_paths_from(start, grid, memo)
+      {acc_paths + paths, memo}
+    end)
+  end
+
+  defp count_paths_from({_x, y}, %{height: height}, memo) when y >= height do
+    {1, memo}
+  end
+
+  defp count_paths_from({x, _y}, %{width: width}, memo) when x < 0 or x >= width do
+    {1, memo}
+  end
+
+  defp count_paths_from(pos = {x, y}, grid = %{splitters: splitters}, memo) do
+
+    case memo do
+      %{^pos => cached} ->
+        {cached, memo}
+
+      _ ->
+        {paths, memo_after_children} =
+          if MapSet.member?(splitters, pos) do
+            {left_paths, memo1} = count_paths_from({x - 1, y + 1}, grid, memo)
+            {right_paths, memo2} = count_paths_from({x + 1, y + 1}, grid, memo1)
+            
+            {left_paths + right_paths, memo2}
+          else
+            count_paths_from({x, y + 1}, grid, memo)
+          end
+
+        {paths, Map.put(memo_after_children, pos, paths)}
+    end
   end
 
   def part2(input) do
-    input
-    |> String.split("\n", trim: true)
-    |> process_rows("LEFT", 0, %{current_beams: %{}, splits: 0})
-    |> Map.get(:current_beams)
+    grid =
+      input
+      |> String.split("\n", trim: true)
+      |> parse_to_grid()
+
+    {paths, _memo} = count_paths(grid, %{})
+    paths
   end
 end

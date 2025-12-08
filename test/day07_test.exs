@@ -18,9 +18,9 @@ defmodule Day07Test do
 .^.^.^.^.^...^.
 ..............."
 
-  # test "part1 example" do
-  #   assert Day07.part1(@example_input) == 21
-  # end
+  test "part1 example" do
+    assert Day07.part1(@example_input) == 21
+  end
 
   test "part2 example" do
     assert Day07.part2(@example_input) == 40
