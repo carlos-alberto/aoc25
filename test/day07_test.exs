@@ -23,6 +23,6 @@ defmodule Day07Test do
   end
 
   test "part2 example" do
-    assert Day07.part2(@example_input) == 10000
+    assert Day07.part2(@example_input) == 40
   end
 end
