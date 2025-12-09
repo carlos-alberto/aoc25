@@ -103,7 +103,6 @@ defmodule Day07 do
   end
 
   defp count_paths_from(pos = {x, y}, grid = %{splitters: splitters}, memo) do
-
     case memo do
       %{^pos => cached} ->
         {cached, memo}
@@ -113,7 +112,7 @@ defmodule Day07 do
           if MapSet.member?(splitters, pos) do
             {left_paths, memo1} = count_paths_from({x - 1, y + 1}, grid, memo)
             {right_paths, memo2} = count_paths_from({x + 1, y + 1}, grid, memo1)
-            
+
             {left_paths + right_paths, memo2}
           else
             count_paths_from({x, y + 1}, grid, memo)
