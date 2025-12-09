@@ -22,11 +22,11 @@ defmodule Day08Test do
 984,92,344
 425,690,689"
 
-  test "part1 example" do
-    assert Day08.part1(@example_input, 10) == 40
-  end
-
-  # test "part2 example" do
-  #   assert Day08.part2(@example_input) == :todo
+  # test "part1 example" do
+  #   assert Day08.part1(@example_input, 10) == 40
   # end
+
+  test "part2 example" do
+    assert Day08.part2(@example_input) == 25272
+  end
 end

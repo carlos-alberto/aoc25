@@ -14,34 +14,29 @@ defmodule Day08 do
     |> Enum.sort()
   end
 
-  defp push_heap(heap, item, n) do
-    heap = [item | heap] |> Enum.sort_by(& &1.distance, :desc)
-
-    if length(heap) > n do
-      tl(heap)
-    else
-      heap
-    end
+  def calculate_distances(coords) do
+    do_calculate(coords, [])
   end
 
-  defp calculate_distances(coords, n) do
-    pairs =
-      for {c1, i} <- Enum.with_index(coords),
-          c2 <- Enum.drop(coords, i + 1) do
-        {c1, c2}
-      end
+  defp do_calculate([], results), do: List.flatten(results)
 
-    pairs
-    |> Task.async_stream(
-      fn {c1, c2} ->
-        %{pair: {c1, c2}, distance: calculate_distance(c1, c2)}
-      end,
-      max_concurrency: System.schedulers_online(),
-      timeout: :infinity
-    )
-    |> Enum.reduce([], fn {:ok, result}, heap ->
-      push_heap(heap, result, n)
+  defp do_calculate([current_point | rest_points], results) do
+    task = Task.async(fn ->
+      Enum.map(rest_points, fn other_point ->
+        %{
+          pair: {current_point, other_point},
+          distance: calculate_distance(current_point, other_point)
+        }
+      end)
     end)
+
+    do_calculate(rest_points, [task | results])
+  end
+
+  def await_results(tasks) do
+    tasks
+    |> Task.await_many()
+    |> List.flatten()
   end
 
   defp calculate_distance({x1, y1, z1}, {x2, y2, z2}) do
@@ -91,7 +86,10 @@ defmodule Day08 do
   def part1(input, count) do
     input
     |> parse_input()
-    |> calculate_distances(count)
+    |> calculate_distances()
+    |> await_results()
+    |> Enum.sort_by(& &1.distance)
+    |> Enum.take(count)
     |> make_circuits()
     |> reduce_circuits()
     |> Enum.sort_by(&MapSet.size/1, :desc)
