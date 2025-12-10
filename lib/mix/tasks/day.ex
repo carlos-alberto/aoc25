@@ -1,9 +1,24 @@
 defmodule Mix.Tasks.Day do
   use Mix.Task
 
-  @shortdoc "Run a specific Advent of Code day. Example: mix day 1"
+  @shortdoc "Run a specific Advent of Code day. Example: mix day 1 or mix day 1 --part 2"
 
   def run([day_str]) do
+    do_run(day_str, :both)
+  end
+
+  def run([day_str, "--part", part_str]) do
+    part =
+      case part_str do
+        "1" -> :one
+        "2" -> :two
+        _ -> Mix.raise("Invalid part: #{part_str}")
+      end
+
+    do_run(day_str, part)
+  end
+
+  def do_run(day_str, part) do
     day =
       case Integer.parse(day_str) do
         {n, _} -> n
@@ -26,15 +41,33 @@ defmodule Mix.Tasks.Day do
       Mix.raise("No module found for #{inspect(mod)}")
     end
 
-    part1 = apply(mod, :part1, [input])
-    part2 = apply(mod, :part2, [input])
+    case part do
+      :one ->
+        result = apply(mod, :part1, [input])
+        Mix.shell().info("Day #{day} - Part one: #{inspect(result)}")
 
-    Mix.shell().info("Day #{day}")
-    Mix.shell().info("  Part 1: #{inspect(part1)}")
-    Mix.shell().info("  Part 2: #{inspect(part2)}")
+      :two ->
+        result = apply(mod, :part2, [input])
+        Mix.shell().info("Day #{day} - Part two: #{inspect(result)}")
+
+      :both ->
+        part1 = apply(mod, :part1, [input])
+        part2 = apply(mod, :part2, [input])
+        Mix.shell().info("Day #{day} - Part one: #{inspect(part1)}")
+        Mix.shell().info("Day #{day} - Part two: #{inspect(part2)}")
+    end
   end
 
-  def run(_args) do
-    Mix.raise("Usage: mix day <number>")
+  def help do
+    Mix.shell().info("""
+    Usage: mix day <day_number> [--part <part_number>]
+
+    Runs the specified day's solution. If --part is not provided, runs both parts.
+
+    Examples:
+      mix day 1
+      mix day 2 --part 1
+      mix day 10 --part 2
+    """)
   end
 end
