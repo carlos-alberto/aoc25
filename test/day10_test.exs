@@ -9,7 +9,7 @@ defmodule Day10Test do
     assert Day10.part1(@example_input) == 7
   end
 
-  # test "part2 example" do
-  #   assert Day10.part2(@example_input) == :todo
-  # end
+  test "part2 example" do
+    assert Day10.part2(@example_input) == 33
+  end
 end
